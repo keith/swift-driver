@@ -93,7 +93,7 @@ final class foo: XCTestCase {
       always: [cSource, bSource],
       andWhenDisabled: [aSource, mainSource])
 
-    let whenAddingCFunc = ExpectedCompilations(
+    let whenAddRemovePrivateLet = ExpectedCompilations(
       always: [bSource, aSource, mainSource],
       andWhenDisabled: [])
 
@@ -102,8 +102,8 @@ final class foo: XCTestCase {
       Step(                      building: modules, .expecting(.none)),
       Step(adding: "updateConstant", building: modules, .expecting(whenUpdatingConstant)),
       Step(                      building: modules, .expecting(whenUpdatingConstant)),
-      Step(adding: "privateLet", building: modules, .expecting(whenAddingCFunc)),
-      Step(                      building: modules, .expecting(whenAddingCFunc)),
+      Step(adding: "privateLet", building: modules, .expecting(whenAddRemovePrivateLet)),
+      Step(                      building: modules, .expecting(whenAddRemovePrivateLet)),
       Step(adding: "updateConstant", building: modules, .expecting(whenUpdatingConstant)),
       Step(                      building: modules, .expecting(whenUpdatingConstant)),
     ]
