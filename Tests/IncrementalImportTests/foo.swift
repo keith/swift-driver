@@ -21,12 +21,18 @@ final class foo: XCTestCase {
 
     // MARK: - Define sources & imported module
     let cSource = Source(named: "C", containing: """
+        //# updateConstant /*
         public struct C {
             private let value: String = "C"
             public init() {}
             public func doStuff(parameter: Int = 1) { print(self.value) }
-            //# extraCFunc private func extra() {}
         }
+        //# updateConstant */
+        //# updateConstant public struct C {
+        //# updateConstant     private let value: String = "C"
+        //# updateConstant     public init() {}
+        //# updateConstant     public func doStuff(parameter: Int = 2) { print(self.value) }
+        //# updateConstant }
         """)
     let c = Module(named: "C", containing: [cSource], producing: .library)
 
@@ -35,7 +41,7 @@ final class foo: XCTestCase {
 
         public struct B {
             private let value: String = "B"
-            private let c: C = C()
+            //# privateLet private let c: C = C()
             public init() {}
             public func doStuff() {
                 print(value)
@@ -83,14 +89,23 @@ final class foo: XCTestCase {
     // Define module ordering & what to compile
     let modules = [c, b, a, mainModule]
 
+    let whenUpdatingConstant = ExpectedCompilations(
+      always: [cSource, bSource],
+      andWhenDisabled: [aSource, mainSource])
+
     let whenAddingCFunc = ExpectedCompilations(
-      always: [cSource],
-      andWhenDisabled: [bSource, aSource, mainSource])
+      always: [bSource, aSource, mainSource],
+      andWhenDisabled: [])
 
     let steps = [
-      Step(                    building: modules, .expecting(modules.allSourcesToCompile)),
-      Step(                    building: modules, .expecting(.none)),
-      Step(adding: "extraCFunc", building: modules, .expecting(whenAddingCFunc)),
+      Step(                      building: modules, .expecting(modules.allSourcesToCompile)),
+      Step(                      building: modules, .expecting(.none)),
+      Step(adding: "updateConstant", building: modules, .expecting(whenUpdatingConstant)),
+      Step(                      building: modules, .expecting(whenUpdatingConstant)),
+      Step(adding: "privateLet", building: modules, .expecting(whenAddingCFunc)),
+      Step(                      building: modules, .expecting(whenAddingCFunc)),
+      Step(adding: "updateConstant", building: modules, .expecting(whenUpdatingConstant)),
+      Step(                      building: modules, .expecting(whenUpdatingConstant)),
     ]
 
     // Do the test
