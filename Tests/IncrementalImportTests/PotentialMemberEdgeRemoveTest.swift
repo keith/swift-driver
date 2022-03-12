@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2021 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2022 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -14,11 +14,8 @@ import TSCBasic
 import SwiftOptions
 import IncrementalTestFramework
 
-/// Test what happens when adding a function in an extension to a class and a struct.
-final class foo: XCTestCase {
-
-  func testFoo() throws {
-
+final class PotentialMemberEdgeRemoveTest: XCTestCase {
+  func testRemovingPotentialMemberEdgeResetsState() throws {
     // MARK: - Define sources & imported module
     let cSource = Source(named: "C", containing: """
         //# updateConstant /*
@@ -82,7 +79,8 @@ final class foo: XCTestCase {
         App.main()
         """)
 
-    let mainModule = Module(named: "main", containing: [mainSource], importing: [a, b, c], producing: .executable)
+    let mainModule = Module(
+      named: "main", containing: [mainSource], importing: [a, b, c], producing: .executable)
 
     // MARK: - Define the test
 
@@ -98,14 +96,14 @@ final class foo: XCTestCase {
       andWhenDisabled: [])
 
     let steps = [
-      Step(                      building: modules, .expecting(modules.allSourcesToCompile)),
-      Step(                      building: modules, .expecting(.none)),
+      Step(                          building: modules, .expecting(modules.allSourcesToCompile)),
+      Step(                          building: modules, .expecting(.none)),
       Step(adding: "updateConstant", building: modules, .expecting(whenUpdatingConstant)),
-      Step(                      building: modules, .expecting(whenUpdatingConstant)),
-      Step(adding: "privateLet", building: modules, .expecting(whenAddRemovePrivateLet)),
-      Step(                      building: modules, .expecting(whenAddRemovePrivateLet)),
+      Step(                          building: modules, .expecting(whenUpdatingConstant)),
+      Step(adding: "privateLet",     building: modules, .expecting(whenAddRemovePrivateLet)),
+      Step(                          building: modules, .expecting(whenAddRemovePrivateLet)),
       Step(adding: "updateConstant", building: modules, .expecting(whenUpdatingConstant)),
-      Step(                      building: modules, .expecting(whenUpdatingConstant)),
+      Step(                          building: modules, .expecting(whenUpdatingConstant)),
     ]
 
     // Do the test
